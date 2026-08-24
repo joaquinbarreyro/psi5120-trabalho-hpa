@@ -1,0 +1,20 @@
+# Service utilizado para disponibilizar a aplicação web
+# dentro do cluster Kubernetes.
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-hpa
+  namespace: trabalho-hpa
+
+spec:
+  # Seleciona os Pods criados pelo Deployment web-hpa.
+  selector:
+    app: web-hpa
+
+  ports:
+    - port: 80
+      targetPort: 80
+
+  # ClusterIP é suficiente, pois a carga será gerada
+  # a partir de dentro do próprio cluster.
+  type: ClusterIP

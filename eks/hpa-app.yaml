@@ -1,0 +1,94 @@
+# Deployment da aplicação web utilizada no experimento de HPA no Amazon EKS.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-hpa
+  namespace: trabalho-hpa
+
+spec:
+  # Uma réplica inicial. O número de réplicas é posteriormente controlado pelo HPA.
+  replicas: 1
+
+  # Identifica os Pods pertencentes a este Deployment.
+  selector:
+    matchLabels:
+      app: web-hpa
+
+  template:
+    metadata:
+      labels:
+        app: web-hpa
+
+    spec:
+      containers:
+        - name: web
+
+          # Imagem utilizada no walkthrough oficial de HPA do Kubernetes.
+          image: registry.k8s.io/hpa-example
+
+          # Porta HTTP disponibilizada pela aplicação.
+          ports:
+            - containerPort: 80
+
+          # O HPA calcula a utilização de CPU em relação ao CPU request.
+          resources:
+            requests:
+              cpu: 200m
+              memory: 64Mi
+
+            # Limites máximos de recursos permitidos para o container.
+            limits:
+              cpu: 500m
+              memory: 128Mi
+
+---
+# Service interno utilizado para acessar os Pods da aplicação.
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-hpa
+  namespace: trabalho-hpa
+
+spec:
+  # Seleciona os Pods criados pelo Deployment web-hpa.
+  selector:
+    app: web-hpa
+
+  ports:
+    # O Service recebe requisições na porta 80 e as encaminha
+    # para a porta 80 dos containers.
+    - port: 80
+      targetPort: 80
+
+  # Não é necessária exposição externa, pois o gerador de carga
+  # executa dentro do próprio cluster.
+  type: ClusterIP
+
+---
+# Horizontal Pod Autoscaler baseado na utilização média de CPU dos Pods.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: web-hpa
+  namespace: trabalho-hpa
+
+spec:
+  # Deployment cujo número de réplicas será controlado pelo HPA.
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-hpa
+
+  # O HPA pode variar entre 1 e 10 réplicas.
+  minReplicas: 1
+  maxReplicas: 10
+
+  # Utilização média de CPU utilizada como métrica de escalamento.
+  # O alvo corresponde a 50% do CPU request configurado nos containers.
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50

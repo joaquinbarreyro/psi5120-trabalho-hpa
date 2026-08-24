@@ -1,0 +1,40 @@
+# Deployment da aplicação web utilizada no experimento de HPA.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-hpa
+  namespace: trabalho-hpa
+
+spec:
+  # Uma réplica inicial. O número de réplicas é posteriormente controlado pelo HPA.
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: web-hpa
+
+  template:
+    metadata:
+      labels:
+        app: web-hpa
+
+    spec:
+      containers:
+        - name: web
+          # Imagem utilizada no walkthrough oficial de HPA do Kubernetes.
+          image: registry.k8s.io/hpa-example
+
+          ports:
+            - containerPort: 80
+
+          # Requests são importantes porque o HPA baseado em utilização
+          # calcula o consumo de CPU em relação ao valor solicitado.
+          resources:
+            requests:
+              cpu: 200m
+              memory: 64Mi
+
+            # Limites máximos permitidos para o container.
+            limits:
+              cpu: 500m
+              memory: 128Mi
