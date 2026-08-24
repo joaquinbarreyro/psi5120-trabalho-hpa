@@ -29,7 +29,8 @@ A carga foi gerada por um Pod auxiliar executando BusyBox e realizando continuam
 .
 ├── README.md
 ├── artigo/
-│   └── artigo.pdf
+│   └── sbc_projeto_intermediario_kubernetes.pdf
+│   └── sbc_projeto_intermediario_kubernetes.odt
 ├── minikube/
 │   ├── deployment.yaml
 │   ├── service.yaml
